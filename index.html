@@ -91,18 +91,9 @@
       <label for="project">Projekt</label>
       <select id="project">
         <option value="" selected>Projekt auswählen …</option>
-        <option value="104932_SWLemgo_GWS">104932_SWLemgo_GWS</option>
+        <option value="100001_Beispiel_Projekt_A">100001_Beispiel_Projekt_A</option>
         <option value="none"># ohne Projekt #</option>
-        <option value="100224_ToyotaGR_EVZ">100224_ToyotaGR_EVZ</option>
-        <option value="101945_Neste_BH_Brennerumrüstung">101945_Neste_BH_Brennerumrüstung</option>
-        <option value="102420_PV-Anlage">102420_PV-Anlage</option>
-        <option value="103328_SW_Bayreuth_Anpassung_Leistung_AWT…">103328_SW_Bayreuth_Anpassung_Leistung_AWT…</option>
-        <option value="103478_STWN_B2">103478_STWN_B2</option>
-        <option value="103779_STWN_A4_Einbindung_HT-WP">103779_STWN_A4_Einbindung_HT-WP</option>
-        <option value="103922_RE_Dampfkessel_Frankfurt">103922_RE_Dampfkessel_Frankfurt</option>
-        <option value="105024_Gropper_E-Dampfkessel">105024_Gropper_E-Dampfkessel</option>
-        <option value="105562_RE_HHFW_KFB_Verrohrung">105562_RE_HHFW_KFB_Verrohrung</option>
-        <option value="105853_K+S_Hattorf">105853_K+S_Hattorf</option>
+        <option value="100002_Beispiel_Projekt_B">100002_Beispiel_Projekt_B</option>
       </select>
     </div>
     <div class="check-field">
@@ -110,7 +101,7 @@
         <input id="anonymize" type="checkbox">
         <span>Projekt anonymisieren</span>
       </label>
-      <button class="tooltip" type="button" aria-label="Hilfe zur Projektanonymisierung" title="Im Betreff wird nur der Teil vor dem ersten Unterstrich angezeigt, zum Beispiel 104932 statt 104932_SWLemgo_GWS. Die Projektliste bleibt vollständig.">i</button>
+      <button class="tooltip" type="button" aria-label="Hilfe zur Projektanonymisierung" title="Im Betreff wird nur der Teil vor dem ersten Unterstrich angezeigt, zum Beispiel 100001 statt 100001_Beispiel_Projekt_A. Die Projektliste bleibt vollständig.">i</button>
     </div>
     <div class="field">
       <label for="suffix">Betreff</label>
@@ -237,6 +228,39 @@
   }
 
   settings.projects = readProjectOptions();
+
+  var storageKey = 'betreffAssistentSettings';
+
+  function persistSettings() {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(settings));
+    } catch (error) {}
+  }
+
+  function restoreSettings() {
+    var stored;
+    try {
+      stored = JSON.parse(window.localStorage.getItem(storageKey) || 'null');
+    } catch (error) {
+      return;
+    }
+    if (!stored || typeof stored !== 'object') return;
+    if (['JJMMTT', 'JJMMTT_SSMM', ''].indexOf(stored.dateFormat) !== -1) settings.dateFormat = stored.dateFormat;
+    if (Array.isArray(stored.order) && stored.order.length === 4 &&
+        stored.order.slice(0).sort().join() === settings.order.slice(0).sort().join()) {
+      settings.order = stored.order;
+    }
+    if (stored.enabled && typeof stored.enabled === 'object') {
+      Object.keys(settings.enabled).forEach(function (key) { settings.enabled[key] = stored.enabled[key] !== false; });
+    }
+    if (typeof stored.separator === 'string') settings.separator = stored.separator;
+    if (typeof stored.subjectSeparator === 'string') settings.subjectSeparator = stored.subjectSeparator;
+    if (typeof stored.prefixCode === 'string') settings.prefixCode = stored.prefixCode;
+    if (Array.isArray(stored.projects)) {
+      settings.projects = stored.projects.filter(function (entry) { return typeof entry === 'string' && entry; });
+      renderProjectOptions('');
+    }
+  }
 
   function formatDate(pattern) {
     var d;
@@ -539,6 +563,7 @@
     settings.prefixCode = trim(prefixCodeInput.value);
     settings.projects = cleaned;
     renderProjectOptions(selectedValue);
+    persistSettings();
     closeSettings();
     refresh();
   }
@@ -578,6 +603,8 @@
   copy.addEventListener('click', function () {
     copySubject(buildSubject());
   });
+
+  restoreSettings();
 
   if (window.Office && Office.onReady) {
     subjectReady = false;

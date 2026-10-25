@@ -9,11 +9,11 @@
   <DefaultLocale>de-DE</DefaultLocale>
   <DisplayName DefaultValue="Betreff-Assistent"/>
   <Description DefaultValue="Erstellt einheitliche Betreffzeilen für E-Mail-Entwürfe."/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png"/>
-  <SupportUrl DefaultValue="https://localhost:3000/"/>
+  <IconUrl DefaultValue="https://mat3004.github.io/Betreff-Assistent/assets/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://mat3004.github.io/Betreff-Assistent/assets/icon-128.png"/>
+  <SupportUrl DefaultValue="https://mat3004.github.io/Betreff-Assistent/"/>
   <AppDomains>
-    <AppDomain>https://localhost:3000</AppDomain>
+    <AppDomain>https://mat3004.github.io</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Mailbox"/>
@@ -26,7 +26,7 @@
   <FormSettings>
     <Form xsi:type="ItemEdit">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:3000/index.html"/>
+        <SourceLocation DefaultValue="https://mat3004.github.io/Betreff-Assistent/index.html"/>
       </DesktopSettings>
     </Form>
   </FormSettings>
@@ -72,13 +72,13 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16" DefaultValue="https://mat3004.github.io/Betreff-Assistent/assets/icon-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="https://mat3004.github.io/Betreff-Assistent/assets/icon-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="https://mat3004.github.io/Betreff-Assistent/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/index.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://mat3004.github.io/Betreff-Assistent/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://mat3004.github.io/Betreff-Assistent/index.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="Group.Label" DefaultValue="Betreff-Assistent"/>

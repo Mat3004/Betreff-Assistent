@@ -9,6 +9,13 @@ extrahiert den Restbetreff und übernimmt die normalisierte Vorschau unmittelbar
 in den Entwurf. Außerhalb von Outlook kann die HTML-Seite weiterhin als Demo
 geöffnet werden.
 
+## Über GitHub Pages bereitstellen
+
+Das Manifest verweist auf `https://mat3004.github.io/Betreff-Assistent/`. Dafür
+muss GitHub Pages aktiv sein (Settings → Pages → Branch `main`, Ordner `/ (root)`),
+danach `manifest.xml` in Outlook hochladen. Für lokale Entwicklung die URLs im
+Manifest wieder auf `https://localhost:3000/` setzen.
+
 ## Lokal starten
 
 Voraussetzungen: Node.js 18 oder neuer und ein unterstützter Outlook-Client.
@@ -37,13 +44,11 @@ Umgebungen geprüft werden.
   beim Öffnen der Task Pane ersetzt. Übernommen wird der Text nach dem
   erkannten Projekt und dem konfigurierten Projekt-Betreff-Trenner; bei
   unbekanntem Projekt dient der Projekt-Betreff-Trenner als Trennstelle.
-- Einstellungen und geänderte Projektlisten gelten nur in der geöffneten
-  Task-Pane-Sitzung.
-- Der Projekteintag `103328_SW_Bayreuth_Anpassung_Leistung_AWT…` ist aus der
-  HTML-Vorlage übernommen und weiterhin unvollständig. Vor produktiver Nutzung
-  muss er mit der Originalquelle vervollständigt werden.
-- Die Projektliste ist eine lokale Testliste; es gibt keine SharePoint- oder
-  andere zentrale Datenanbindung.
+- Einstellungen und Projektliste werden im lokalen Browserspeicher des jeweiligen
+  Outlook-Clients gespeichert (`localStorage`) und gelten pro Gerät.
+- Das Repository enthält nur Beispielprojekte. Die echte Projektliste wird über
+  das Zahnrad eingetragen und nicht in den Code geschrieben.
+- Es gibt keine SharePoint- oder andere zentrale Datenanbindung.
 
 Das XML-Manifest verwendet die klassische Outlook-Web-Add-in-Manifestform, um
 klassisches Outlook, neues Outlook und Outlook im Web mit demselben Task
