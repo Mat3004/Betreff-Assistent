@@ -393,17 +393,6 @@
       subjectReady = true;
       composeStatus = '';
       refresh();
-
-      var normalizedSubject = buildSubject();
-      if (!normalizedSubject) return;
-      item.subject.setAsync(normalizedSubject, function (setResult) {
-        if (setResult.status === office.AsyncResultStatus.Succeeded) {
-          status.textContent = 'Vorhandener Betreff wurde bereinigt und übernommen.';
-        } else {
-          composeStatus = 'Der bereinigte Betreff konnte nicht übernommen werden: ' + setResult.error.message;
-          refresh();
-        }
-      });
     });
   }
 
