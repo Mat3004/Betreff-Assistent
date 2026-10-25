@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Betreff-Assistent</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #454545;
+    --muted: #707070;
+    --line: #dedede;
+    --soft: #f6f6f6;
+    --blue: #e60012;
+    --blue-dark: #bf0010;
+    --blue-soft: #fff4f4;
+    --green: #39704f;
+    --red: #a4262c;
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f3f2f1; color: var(--ink); }
+  .pane { display:flex; flex-direction:column; max-width:520px; min-height:100vh; margin:0 auto; background:#fff; border-left:1px solid #e1dfdd; border-right:1px solid #e1dfdd; }
+  header { padding:18px 22px 15px; color:var(--ink); background:#fff; border-bottom:4px solid #e60012; }
+  .topline { display:flex; align-items:center; }
+  .logo { display:block; width:100%; max-width:450px; height:auto; }
+  header h1 { font-size:23px; margin:14px 0 5px; line-height:1.2; font-weight:650; }
+  header p { margin:0; font-size:13px; line-height:1.5; color:var(--muted); }
+  main { flex:1; padding:21px 22px 24px; }
+  .copyright { display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding:10px 18px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }
+  .section-label { margin:0 0 15px; font-size:11px; color:var(--blue-dark); letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+  .field { margin-bottom:17px; }
+  label { display:block; font-weight:600; font-size:13px; margin-bottom:7px; }
+  select, input[type="text"], textarea { width:100%; min-height:39px; border:1px solid #8a8886; border-radius:2px; background:#fff; color:var(--ink); font:14px "Segoe UI", Arial, sans-serif; padding:8px 10px; }
+  textarea { min-height:160px; resize:vertical; line-height:1.45; }
+  select:focus, input:focus, textarea:focus, button:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+  input[type="checkbox"] { accent-color:var(--blue); width:16px; height:16px; margin:0; }
+  .check-field { display:flex; align-items:center; gap:7px; margin:-3px 0 17px; }
+  .check-label { display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; }
+  .check-label span { font-size:13px; font-weight:600; }
+  .tooltip { display:inline-flex; justify-content:center; align-items:center; width:19px; height:19px; min-height:19px; border:1px solid #a6a6a6; border-radius:50%; padding:0; background:#fff; color:#555; font-size:11px; line-height:1; }
+  .preview { border:1px solid #f0d1d3; border-left:4px solid var(--blue); background:var(--blue-soft); padding:13px 14px; margin:3px 0 18px; }
+  .preview-head { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:8px; }
+  .preview-head strong { font-size:13px; }
+  .preview-text { display:block; overflow-wrap:anywhere; min-height:21px; font-family:Consolas, "Courier New", monospace; font-size:13px; line-height:1.55; }
+  .preview-empty { color:#605e5c; font-family:"Segoe UI", Arial, sans-serif; font-style:italic; }
+  .buttons { display:flex; gap:9px; flex-wrap:wrap; }
+  button { min-height:38px; border:1px solid var(--blue); border-radius:2px; padding:8px 13px; font:600 13px "Segoe UI", Arial, sans-serif; cursor:pointer; }
+  .primary { background:var(--blue); color:white; }
+  .primary:hover:not(:disabled) { background:var(--blue-dark); }
+  .secondary { background:white; color:var(--blue-dark); }
+  .secondary:hover:not(:disabled) { background:#fff7f7; }
+  button:disabled { border-color:#c8c6c4; background:#f3f2f1; color:#a19f9d; cursor:not-allowed; }
+  .status { min-height:18px; margin:9px 0 0; font-size:12px; color:var(--green); }
+  .gear-button { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; min-height:36px; border:1px solid transparent; border-radius:4px; padding:0; background:transparent; color:#353535; transition:color .15s ease, background .15s ease, border-color .15s ease; }
+  .gear-button svg { width:22px; height:22px; fill:currentColor; stroke:none; }
+  .gear-button:hover { color:var(--blue); background:#fff1f2; border-color:#f3d1d4; }
+  .settings-overlay { position:fixed; inset:0; z-index:100; display:flex; align-items:flex-end; justify-content:center; padding:0; background:rgba(35,35,35,.42); }
+  .settings-overlay[hidden] { display:none; }
+  .settings-panel { width:min(100%,520px); max-height:92vh; overflow:auto; background:#fff; border-top:5px solid var(--blue); box-shadow:0 10px 35px rgba(0,0,0,.2); padding:18px 22px 20px; }
+  .settings-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:17px; }
+  .settings-head h2 { margin:0; font-size:19px; font-weight:650; }
+  .close-button { width:34px; min-height:34px; padding:0; border-color:transparent; background:transparent; color:var(--muted); font-size:23px; }
+  .setting-label { display:flex; align-items:center; gap:7px; }
+  .settings-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:17px; }
+  .order-list { list-style:none; margin:0; padding:0; border:1px solid var(--line); }
+  .order-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:7px 9px; border-bottom:1px solid var(--line); background:#fff; }
+  .order-item:last-child { border-bottom:0; }
+  .order-enable { display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; }
+  .order-enable input { width:15px; height:15px; margin:0; accent-color:var(--blue); }
+  .order-name { font-size:13px; font-weight:600; }
+  .order-move { display:flex; gap:5px; }
+  .move-button { width:32px; min-height:29px; padding:0; background:#fff; color:var(--blue-dark); }
+  .move-button:disabled { border-color:#e4e4e4; background:#f5f5f5; }
+  @media (min-width:600px) { .settings-overlay { align-items:center; padding:18px; } .settings-panel { border-top:5px solid var(--blue); } }
+  @media (max-width:420px) { header, main { padding-left:16px; padding-right:16px; } .buttons button { flex:1 1 145px; } .settings-panel { padding-left:16px; padding-right:16px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior:auto !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="pane">
+  <header>
+    <div class="topline"><img class="logo" alt="AGO – Ein Unternehmen der RheinEnergie" src="data:image/png;base64,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"></div>
+    <h1>Betreff zusammenstellen</h1>
+    <p>Projekt auswählen und Betreff eingeben.</p>
+  </header>
+  <main>
+    <p class="section-label">Neue E-Mail</p>
+    <div class="field">
+      <label for="project">Projekt</label>
+      <select id="project">
+        <option value="" selected>Projekt auswählen …</option>
+        <option value="104932_SWLemgo_GWS">104932_SWLemgo_GWS</option>
+        <option value="none"># ohne Projekt #</option>
+        <option value="100224_ToyotaGR_EVZ">100224_ToyotaGR_EVZ</option>
+        <option value="101945_Neste_BH_Brennerumrüstung">101945_Neste_BH_Brennerumrüstung</option>
+        <option value="102420_PV-Anlage">102420_PV-Anlage</option>
+        <option value="103328_SW_Bayreuth_Anpassung_Leistung_AWT…">103328_SW_Bayreuth_Anpassung_Leistung_AWT…</option>
+        <option value="103478_STWN_B2">103478_STWN_B2</option>
+        <option value="103779_STWN_A4_Einbindung_HT-WP">103779_STWN_A4_Einbindung_HT-WP</option>
+        <option value="103922_RE_Dampfkessel_Frankfurt">103922_RE_Dampfkessel_Frankfurt</option>
+        <option value="105024_Gropper_E-Dampfkessel">105024_Gropper_E-Dampfkessel</option>
+        <option value="105562_RE_HHFW_KFB_Verrohrung">105562_RE_HHFW_KFB_Verrohrung</option>
+        <option value="105853_K+S_Hattorf">105853_K+S_Hattorf</option>
+      </select>
+    </div>
+    <div class="check-field">
+      <label class="check-label" for="anonymize">
+        <input id="anonymize" type="checkbox">
+        <span>Projekt anonymisieren</span>
+      </label>
+      <button class="tooltip" type="button" aria-label="Hilfe zur Projektanonymisierung" title="Im Betreff wird nur der Teil vor dem ersten Unterstrich angezeigt, zum Beispiel 104932 statt 104932_SWLemgo_GWS. Die Projektliste bleibt vollständig.">i</button>
+    </div>
+    <div class="field">
+      <label for="suffix">Betreff</label>
+      <input id="suffix" type="text" placeholder="Betrefftext eingeben" autocomplete="off">
+    </div>
+    <section class="preview" aria-labelledby="preview-title">
+      <div class="preview-head"><strong id="preview-title">Betreffvorschau</strong></div>
+      <output id="preview" class="preview-text preview-empty" aria-live="polite">Projekt wählen und Restbetreff eingeben.</output>
+    </section>
+    <div class="buttons">
+      <button id="apply" class="primary" type="button" disabled>Betreff übernehmen</button>
+      <button id="copy" class="secondary" type="button" disabled>Betreff kopieren</button>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+  <footer class="copyright">
+    <span>© M. Zapf</span>
+    <button id="settingsButton" class="gear-button" type="button" aria-label="Einstellungen" title="Einstellungen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.28 7.28 0 0 0-1.63-.94l-.36-2.54A.49.49 0 0 0 13.88 2h-3.76a.49.49 0 0 0-.49.42L9.27 4.96a7.28 7.28 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.61.22L2.72 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.05.31-.07.62-.07.94s.02.63.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.12.2.36.29.61.22l2.39-.96c.5.38 1.04.69 1.63.94l.36 2.54c.03.24.24.42.49.42h3.76c.25 0 .46-.18.49-.42l.36-2.54c.59-.25 1.13-.56 1.63-.94l2.39.96c.23.09.49 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"></path></svg></button>
+  </footer>
+  <div id="settingsOverlay" class="settings-overlay" hidden>
+    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
+      <div class="settings-head">
+        <h2 id="settingsTitle">Einstellungen</h2>
+        <button id="closeSettings" class="close-button" type="button" aria-label="Einstellungen schließen" title="Schließen">×</button>
+      </div>
+      <div class="field">
+        <label class="setting-label" for="dateFormat">Datumsformat
+          <button class="tooltip" type="button" aria-label="Hilfe zum Datumsformat" title="JJMMTT = Datum. JJMMTT_SSMM = Datum mit Stunde und Minute. Kein Datum lässt den Datumsbaustein weg.">i</button>
+        </label>
+        <select id="dateFormat">
+          <option value="JJMMTT">JJMMTT</option>
+          <option value="JJMMTT_SSMM">JJMMTT_SSMM</option>
+          <option value="">Kein Datum</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="setting-label">Reihenfolge
+          <button class="tooltip" type="button" aria-label="Hilfe zur Reihenfolge" title="Mit den Häkchen Bausteine ein- oder ausschalten und mit den Pfeilen sortieren. Leere Bausteine werden ausgelassen.">i</button>
+        </label>
+        <ol id="orderList" class="order-list"></ol>
+      </div>
+      <div class="field">
+        <label class="setting-label" for="separator">Standard-Trenner
+          <button class="tooltip" type="button" aria-label="Hilfe zum Standard-Trenner" title="Verbindet die Bausteine, zum Beispiel mit Unterstrich oder Bindestrich.">i</button>
+        </label>
+        <input id="separator" type="text" value="_" maxlength="8" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="setting-label" for="subjectSeparator">Trenner zwischen Projekt und Betreff
+          <button class="tooltip" type="button" aria-label="Hilfe zum Projekt-Betreff-Trenner" title="Wird verwendet, wenn Projekt und Betreff direkt aufeinanderfolgen. Standard: Leerzeichen, Bindestrich, Leerzeichen.">i</button>
+        </label>
+        <input id="subjectSeparator" type="text" value=" - " maxlength="8" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="setting-label" for="prefixCode">Kürzel
+          <button class="tooltip" type="button" aria-label="Hilfe zum Kürzel" title="Optionales Kürzel, zum Beispiel ZM. Seine Position stellst du über die Reihenfolge ein.">i</button>
+        </label>
+        <input id="prefixCode" type="text" placeholder="z. B. ZM" maxlength="16" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="setting-label" for="projectEditor">Projekte
+          <button class="tooltip" type="button" aria-label="Hilfe zur Projektliste" title="Eine Projektbezeichnung pro Zeile. Du kannst Einträge ergänzen, ändern oder entfernen.">i</button>
+        </label>
+        <textarea id="projectEditor" rows="8" spellcheck="false"></textarea>
+      </div>
+      <div class="settings-actions">
+        <button id="cancelSettings" class="secondary" type="button">Abbrechen</button>
+        <button id="saveSettings" class="primary" type="button">Speichern</button>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+(function () {
+  var project = document.getElementById('project');
+  var suffix = document.getElementById('suffix');
+  var anonymize = document.getElementById('anonymize');
+  var preview = document.getElementById('preview');
+  var apply = document.getElementById('apply');
+  var copy = document.getElementById('copy');
+  var status = document.getElementById('status');
+  var settingsButton = document.getElementById('settingsButton');
+  var settingsOverlay = document.getElementById('settingsOverlay');
+  var dateFormatInput = document.getElementById('dateFormat');
+  var orderList = document.getElementById('orderList');
+  var separatorInput = document.getElementById('separator');
+  var subjectSeparatorInput = document.getElementById('subjectSeparator');
+  var prefixCodeInput = document.getElementById('prefixCode');
+  var projectEditor = document.getElementById('projectEditor');
+  var closeSettingsButton = document.getElementById('closeSettings');
+  var cancelSettingsButton = document.getElementById('cancelSettings');
+  var saveSettingsButton = document.getElementById('saveSettings');
+  var lastFocus = null;
+  var subjectReady = true;
+  var draftOrder = [];
+  var draftEnabled = {};
+  var composeStatus = '';
+  var componentNames = { date: 'Datum', code: 'Kürzel', project: 'Projekt', subject: 'Betreff' };
+  var settings = {
+    dateFormat: 'JJMMTT',
+    order: ['date', 'code', 'project', 'subject'],
+    enabled: { date: true, code: true, project: true, subject: true },
+    separator: '_',
+    subjectSeparator: ' - ',
+    prefixCode: '',
+    projects: []
+  };
+
+  function trim(value) {
+    return String(value || '').replace(/^\s+|\s+$/g, '');
+  }
+
+  function pad(value) {
+    return value < 10 ? '0' + value : String(value);
+  }
+
+  function readProjectOptions() {
+    var entries = [];
+    var i;
+    for (i = 1; i < project.options.length; i += 1) {
+      entries.push(project.options[i].value === 'none' ? '# ohne Projekt #' : project.options[i].value);
+    }
+    return entries;
+  }
+
+  settings.projects = readProjectOptions();
+
+  function formatDate(pattern) {
+    var d;
+    if (!pattern) return '';
+    d = new Date();
+    var date = String(d.getFullYear()).slice(-2) + pad(d.getMonth() + 1) + pad(d.getDate());
+    if (pattern === 'JJMMTT_SSMM') return date + '_' + pad(d.getHours()) + pad(d.getMinutes());
+    return date;
+  }
+
+  function buildSubject() {
+    var selectedProject = project.value;
+    var projectName = settings.enabled.project && selectedProject && selectedProject !== 'none' ? selectedProject : '';
+    var values = {
+      date: settings.enabled.date ? formatDate(settings.dateFormat) : '',
+      code: settings.enabled.code ? trim(settings.prefixCode) : '',
+      project: projectName,
+      subject: settings.enabled.subject ? trim(suffix.value) : ''
+    };
+    var parts = [];
+    var keys = [];
+    var i;
+    var key;
+    var value;
+    var delimiter;
+
+    if (values.project && anonymize.checked) values.project = values.project.split('_')[0];
+    for (i = 0; i < settings.order.length; i += 1) {
+      key = settings.order[i];
+      value = values[key];
+      if (!value) continue;
+      if (parts.length) {
+        delimiter = settings.separator;
+        if ((keys[keys.length - 1] === 'project' && key === 'subject') ||
+            (keys[keys.length - 1] === 'subject' && key === 'project')) {
+          delimiter = settings.subjectSeparator;
+        }
+        parts.push(delimiter);
+      }
+      parts.push(value);
+      keys.push(key);
+    }
+    return parts.join('');
+  }
+
+  function stripReplyPrefixes(value) {
+    return trim(value).replace(/^(?:(?:AN|AF|AW|RE|FW|FWD|WG)\s*:\s*)+/i, '');
+  }
+
+  function findExistingProject(subjectText) {
+    var normalized = stripReplyPrefixes(subjectText);
+    var exactMatches = [];
+    var numberMatches = [];
+    var i;
+
+    for (i = 0; i < settings.projects.length; i += 1) {
+      var name = settings.projects[i];
+      if (name === '# ohne Projekt #') continue;
+      var exactIndex = normalized.toLowerCase().indexOf(name.toLowerCase());
+      if (exactIndex >= 0) {
+        exactMatches.push({ name: name, index: exactIndex, length: name.length });
+      } else {
+        var projectNumber = name.split('_')[0];
+        var numberPattern = new RegExp('(^|[^0-9])(' + projectNumber + ')(?=$|[^0-9])', 'i');
+        var numberMatch = numberPattern.exec(normalized);
+        if (numberMatch) {
+          numberMatches.push({
+            name: name,
+            index: numberMatch.index + numberMatch[1].length,
+            length: numberMatch[2].length
+          });
+        }
+      }
+    }
+
+    var matches = exactMatches.length ? exactMatches : numberMatches;
+    matches.sort(function (a, b) { return b.length - a.length; });
+    return matches.length ? matches[0] : null;
+  }
+
+  function extractExistingSubject(subjectText, projectMatch) {
+    var normalized = stripReplyPrefixes(subjectText);
+    var subjectSeparator = settings.subjectSeparator;
+    var subjectTextStart;
+    var subjectTextEnd;
+
+    if (projectMatch) {
+      var beforeProject = normalized.slice(0, projectMatch.index);
+      var afterProject = normalized.slice(projectMatch.index + projectMatch.length);
+      var separatorAfterProject = subjectSeparator ? afterProject.indexOf(subjectSeparator) : -1;
+      if (separatorAfterProject >= 0) {
+        subjectTextStart = separatorAfterProject + subjectSeparator.length;
+        return trim(afterProject.slice(subjectTextStart));
+      }
+
+      var separatorBeforeProject = subjectSeparator ? beforeProject.indexOf(subjectSeparator) : -1;
+      if (separatorBeforeProject >= 0) {
+        subjectTextEnd = beforeProject.lastIndexOf(subjectSeparator);
+        return trim(beforeProject.slice(separatorBeforeProject + subjectSeparator.length, subjectTextEnd));
+      }
+    }
+
+    var separatorWithoutProject = subjectSeparator ? normalized.indexOf(subjectSeparator) : -1;
+    if (separatorWithoutProject >= 0) {
+      return trim(normalized.slice(separatorWithoutProject + subjectSeparator.length));
+    }
+
+    return trim(normalized.replace(/^\d{6}(?:_\d{4})?[_\s-]*/, ''));
+  }
+
+  function loadDraftSubject(item, office) {
+    if (!item.subject || typeof item.subject.getAsync !== 'function') {
+      composeStatus = 'Der vorhandene Betreff kann in diesem Outlook-Client nicht gelesen werden.';
+      refresh();
+      return;
+    }
+
+    item.subject.getAsync(function (result) {
+      if (result.status !== office.AsyncResultStatus.Succeeded) {
+        composeStatus = 'Der vorhandene Betreff konnte nicht gelesen werden: ' + result.error.message;
+        refresh();
+        return;
+      }
+
+      var existingSubject = result.value;
+      var projectMatch = findExistingProject(existingSubject);
+      var cleanedSubject = extractExistingSubject(existingSubject, projectMatch);
+      if (projectMatch) project.value = projectMatch.name;
+      suffix.value = cleanedSubject;
+      subjectReady = true;
+      composeStatus = '';
+      refresh();
+
+      var normalizedSubject = buildSubject();
+      if (!normalizedSubject) return;
+      item.subject.setAsync(normalizedSubject, function (setResult) {
+        if (setResult.status === office.AsyncResultStatus.Succeeded) {
+          status.textContent = 'Vorhandener Betreff wurde bereinigt und übernommen.';
+        } else {
+          composeStatus = 'Der bereinigte Betreff konnte nicht übernommen werden: ' + setResult.error.message;
+          refresh();
+        }
+      });
+    });
+  }
+
+  function refresh() {
+    var value = buildSubject();
+    preview.textContent = value || 'Betreff eingeben';
+    if (preview.classList) {
+      if (value) preview.classList.remove('preview-empty');
+      else preview.classList.add('preview-empty');
+    }
+    apply.disabled = !value || !subjectReady;
+    copy.disabled = !value || !subjectReady;
+    status.textContent = composeStatus;
+  }
+
+  function copySubject(value) {
+    var field;
+    var copied = false;
+    if (!value) return;
+    try {
+      field = document.createElement('textarea');
+      field.value = value;
+      field.style.position = 'fixed';
+      field.style.left = '-9999px';
+      document.body.appendChild(field);
+      field.focus();
+      field.select();
+      copied = document.execCommand('copy');
+      document.body.removeChild(field);
+    } catch (error) {
+      if (field && field.parentNode) field.parentNode.removeChild(field);
+    }
+    status.textContent = copied ? 'Betreff kopiert.' : 'Kopieren nicht möglich.';
+  }
+
+  function moveOrder(index, direction) {
+    var target = index + direction;
+    var temp;
+    if (target < 0 || target >= draftOrder.length) return;
+    temp = draftOrder[index];
+    draftOrder[index] = draftOrder[target];
+    draftOrder[target] = temp;
+    renderOrderList();
+  }
+
+  function renderOrderList() {
+    var i;
+    while (orderList.firstChild) orderList.removeChild(orderList.firstChild);
+    for (i = 0; i < draftOrder.length; i += 1) {
+      (function (index) {
+        var key = draftOrder[index];
+        var item = document.createElement('li');
+        var enableLabel = document.createElement('label');
+        var enable = document.createElement('input');
+        var name = document.createElement('span');
+        var actions = document.createElement('span');
+        var up = document.createElement('button');
+        var down = document.createElement('button');
+        item.className = 'order-item';
+        enableLabel.className = 'order-enable';
+        enable.type = 'checkbox';
+        enable.checked = draftEnabled[key] !== false;
+        enable.setAttribute('aria-label', componentNames[key] + ' verwenden');
+        enable.addEventListener('change', function () { draftEnabled[key] = enable.checked; });
+        name.className = 'order-name';
+        name.textContent = componentNames[key];
+        enableLabel.appendChild(enable);
+        enableLabel.appendChild(name);
+        actions.className = 'order-move';
+        up.type = 'button';
+        up.className = 'move-button';
+        up.textContent = '↑';
+        up.title = 'Nach oben';
+        up.setAttribute('aria-label', componentNames[key] + ' nach oben');
+        up.disabled = index === 0;
+        up.addEventListener('click', function () { moveOrder(index, -1); });
+        down.type = 'button';
+        down.className = 'move-button';
+        down.textContent = '↓';
+        down.title = 'Nach unten';
+        down.setAttribute('aria-label', componentNames[key] + ' nach unten');
+        down.disabled = index === draftOrder.length - 1;
+        down.addEventListener('click', function () { moveOrder(index, 1); });
+        actions.appendChild(up);
+        actions.appendChild(down);
+        item.appendChild(enableLabel);
+        item.appendChild(actions);
+        orderList.appendChild(item);
+      })(i);
+    }
+  }
+
+  function fillSettingsForm() {
+    dateFormatInput.value = settings.dateFormat;
+    separatorInput.value = settings.separator;
+    subjectSeparatorInput.value = settings.subjectSeparator;
+    prefixCodeInput.value = settings.prefixCode;
+    projectEditor.value = settings.projects.join('\n');
+    draftOrder = settings.order.slice(0);
+    draftEnabled = {
+      date: settings.enabled.date,
+      code: settings.enabled.code,
+      project: settings.enabled.project,
+      subject: settings.enabled.subject
+    };
+    renderOrderList();
+  }
+
+  function openSettings() {
+    lastFocus = document.activeElement;
+    fillSettingsForm();
+    settingsOverlay.hidden = false;
+    dateFormatInput.focus();
+  }
+
+  function closeSettings() {
+    settingsOverlay.hidden = true;
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  function renderProjectOptions(selectedValue) {
+    var placeholder = document.createElement('option');
+    var i;
+    while (project.options.length) project.remove(0);
+    placeholder.value = '';
+    placeholder.textContent = 'Projekt auswählen …';
+    project.appendChild(placeholder);
+    for (i = 0; i < settings.projects.length; i += 1) {
+      var entry = settings.projects[i];
+      var option = document.createElement('option');
+      option.value = entry === '# ohne Projekt #' ? 'none' : entry;
+      option.textContent = entry;
+      project.appendChild(option);
+    }
+    project.value = selectedValue || '';
+  }
+
+  function saveSettings() {
+    var selectedValue = project.value;
+    var entries = projectEditor.value.split(/\r?\n/);
+    var cleaned = [];
+    var i;
+    for (i = 0; i < entries.length; i += 1) {
+      var entry = trim(entries[i]);
+      if (entry && cleaned.indexOf(entry) === -1) cleaned.push(entry);
+    }
+    settings.dateFormat = dateFormatInput.value;
+    settings.order = draftOrder.slice(0);
+    settings.enabled = {
+      date: draftEnabled.date !== false,
+      code: draftEnabled.code !== false,
+      project: draftEnabled.project !== false,
+      subject: draftEnabled.subject !== false
+    };
+    settings.separator = separatorInput.value;
+    settings.subjectSeparator = subjectSeparatorInput.value;
+    settings.prefixCode = trim(prefixCodeInput.value);
+    settings.projects = cleaned;
+    renderProjectOptions(selectedValue);
+    closeSettings();
+    refresh();
+  }
+
+  project.addEventListener('change', refresh);
+  suffix.addEventListener('input', refresh);
+  anonymize.addEventListener('change', refresh);
+  settingsButton.addEventListener('click', openSettings);
+  closeSettingsButton.addEventListener('click', closeSettings);
+  cancelSettingsButton.addEventListener('click', closeSettings);
+  saveSettingsButton.addEventListener('click', saveSettings);
+  settingsOverlay.addEventListener('click', function (event) {
+    if (event.target === settingsOverlay) closeSettings();
+  });
+  document.addEventListener('keydown', function (event) {
+    if (!settingsOverlay.hidden && (event.key === 'Escape' || event.keyCode === 27)) closeSettings();
+  });
+
+  apply.addEventListener('click', function () {
+    var value = buildSubject();
+    var office = window.Office;
+    var item = office && office.context && office.context.mailbox && office.context.mailbox.item;
+    if (!value) return;
+    if (item && item.subject && item.subject.setAsync) {
+      item.subject.setAsync(value, function (result) {
+        if (office.AsyncResultStatus && result.status === office.AsyncResultStatus.Succeeded) {
+          status.textContent = 'Betreff wurde übernommen.';
+        } else {
+          status.textContent = 'Betreff konnte nicht übernommen werden.';
+        }
+      });
+    } else {
+      copySubject(value);
+    }
+  });
+
+  copy.addEventListener('click', function () {
+    copySubject(buildSubject());
+  });
+
+  if (window.Office && Office.onReady) {
+    subjectReady = false;
+    composeStatus = 'Vorhandener Betreff wird geladen …';
+    Office.onReady(function (info) {
+      var office = window.Office;
+      if (!info || info.host !== office.HostType.Outlook) {
+        subjectReady = true;
+        composeStatus = '';
+        refresh();
+        return;
+      }
+      var item = office && office.context && office.context.mailbox && office.context.mailbox.item;
+      if (!item) {
+        composeStatus = 'Der offene E-Mail-Entwurf ist in diesem Outlook-Client nicht verfügbar.';
+        refresh();
+        return;
+      }
+      loadDraftSubject(item, office);
+    });
+  }
+
+  refresh();
+  window.setInterval(refresh, 60000);
+})();
+</script>
+</body>
+</html>

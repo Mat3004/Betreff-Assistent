@@ -1,0 +1,15 @@
+{
+  "name": "outlook-betreff-assistent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Outlook-Web-Add-in für einheitliche E-Mail-Betreffzeilen",
+  "scripts": {
+    "start": "node server.js",
+    "sideload:desktop": "office-addin-debugging start manifest.xml desktop",
+    "stop": "office-addin-debugging stop manifest.xml"
+  },
+  "devDependencies": {
+    "office-addin-debugging": "^5.0.1",
+    "office-addin-dev-certs": "^1.13.4"
+  }
+}
